@@ -87,8 +87,8 @@ class AudioDataset(Dataset):
         
         file = self.files[idx]
         wave, sr = self[idx]
-        subtype = 'PCM_24'
-        file_name = file.stem + '.wav'
+        # subtype = 'PCM_16'
+        file_name = file.stem + '.flac'
         dir_name = file.parts[-2]
         target_path = self.output_dir / 'degraded' / dir_name
         gt_path = self.output_dir / 'gt' / dir_name
@@ -101,8 +101,9 @@ class AudioDataset(Dataset):
         gt, gt_sr = librosa.load(file, sr=None, mono=True)
 
         # write ground truth and degraded files as '.wav' into their respective directories
-        sf.write(gt_path/file_name, data=gt, samplerate=gt_sr, subtype=subtype)
-        sf.write(target_path/file_name, data=wave, samplerate=sr, subtype=subtype)
+        # due to lack of HD space, I can't create a same type ground truth
+        sf.write(gt_path/file_name, data=gt, samplerate=gt_sr, format="FLAC")
+        sf.write(target_path/file_name, data=wave, samplerate=sr, format="FLAC")
         # print(f"Written {file_name} to {target_path/file_name}")
 
 

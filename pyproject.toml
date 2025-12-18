@@ -5,14 +5,24 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "attrdict>=2.0.1",
     "beartype>=0.22.9",
+    "bigvgan>=2.4.1",
+    "einops>=0.8.1",
+    "gateloop-transformer>=0.2.5",
     "librosa>=0.11.0",
     "matplotlib>=3.10.7",
     "numpy>=2.3.5",
     "pyaudio>=0.2.14",
+    "scikit-image>=0.25.2",
     "scipy>=1.16.3",
     "sounddevice>=0.5.3",
     "soundfile>=0.13.1",
     "torch>=2.9.1",
+    "torchaudio>=2.9.1",
+    "torchdiffeq>=0.2.5",
+    "torchinfo>=1.8.0",
+    "torchlibrosa>=0.1.0",
+    "torchode>=1.0.0",
     "tqdm>=4.67.1",
 ]

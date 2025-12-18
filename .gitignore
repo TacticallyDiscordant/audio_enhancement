@@ -210,3 +210,8 @@ data/
 .gitignore
 uv.lock
 pyproject.toml
+datasets/
+results/
+reports/
+temp.wav
+models/weights_and_configs/
