@@ -21,17 +21,49 @@ from externals.ssr_eval import SSR_Eval_Helper
 
 
 def test_flowhigh():
+    use_vocoder = True
+    model_config_path = 'models/FLowHigh/model/FLowHigh_indep_adaptive_400k/config.json'
+    model_path = 'models/FLowHigh/model/FLowHigh_indep_adaptive_400k/FLowHigh_indep_adaptive_400k.pt'
+    ode_method = 'euler'
+    up_sampling_method = 'scipy'  # scipy, librosa or torchaudio
     testee = fh.Complete_FLowHigh(
-                            model_config_path='models/FLowHigh/model/FLowHigh_indep_adaptive_400k/config.json',
-                            model_path='models/FLowHigh/model/FLowHigh_indep_adaptive_400k/FLowHigh_indep_adaptive_400k.pt',
+                            model_config_path=model_config_path,
+                            model_path=model_path,
+                            use_vocoder=use_vocoder,
                             input_sr=44100,
-                            ode_method='euler',
-                            up_sampling_method='librosa')
-    test_name = f"{testee.model_path.split('/')[3]}_{testee.ode_method}_{testee.up_sampling_method}"
+                            ode_method=ode_method,
+                            up_sampling_method=up_sampling_method)
+
+    test_name = f"{testee.props['model']['modelname']}_{testee.props['model']['cfm_path']}_{ode_method}_{up_sampling_method}"
     # Initialize a evaluation helper
     helper = SSR_Eval_Helper(
         testee,
         test_name=test_name,  # Test name for storing the result
+        input_sr=44100,  # The sampling rate of the input x in the 'infer' function
+        # output_sr=44100,  # The sampling rate of the output x in the 'infer' function
+        output_sr=48000,
+        evaluation_sr=48000,  # The sampling rate to calculate evaluation metrics.
+        setting_fft={
+            "cutoff_freq": [
+                12000
+            ],  # The cutoff frequency of the input x in the 'infer' function
+        },
+        save_processed_result=True
+    )
+    # Perform evaluation
+    helper.evaluate(limit_test_nums=10, limit_test_speaker=-1)
+
+
+def test_rAI_FLowHigh():
+    
+    testee = fh.rAI_FLowHigh(
+            input_sr=44100,
+            target_sr=48000
+            )
+    # Initialize a evaluation helper
+    helper = SSR_Eval_Helper(
+        testee,
+        test_name='rAI_FLowHigh',  # Test name for storing the result
         input_sr=44100,  # The sampling rate of the input x in the 'infer' function
         # output_sr=44100,  # The sampling rate of the output x in the 'infer' function
         output_sr=48000,
@@ -100,6 +132,7 @@ def test_FlashSR():
     helper.evaluate(limit_test_nums=10, limit_test_speaker=-1)
 """
 
-test_flowhigh()
+# test_flowhigh()
 # test_VAudioSR()
 # test_FlashSR()
+test_rAI_FLowHigh()

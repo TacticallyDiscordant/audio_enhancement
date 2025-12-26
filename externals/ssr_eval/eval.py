@@ -8,6 +8,8 @@ from externals.ssr_eval.metrics import AudioMetrics
 from externals.ssr_eval.utils import *
 from externals.ssr_eval.lowpass import lowpass
 
+from models.FLowHigh.utils import save_plot, save_stft_plot
+
 # ----------------------------------------------------------------
 # README:
 # Define several functions for data generation.
@@ -132,7 +134,7 @@ class SSR_Eval_Helper:
                 ret.append(file)
         return ret
 
-    def evaluate(self, limit_test_nums=-1, limit_test_speaker=-1):
+    def evaluate(self, limit_test_nums=-1, limit_test_speaker=-1, image_path=None):
         from tqdm import tqdm
         from datetime import datetime
 
