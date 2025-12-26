@@ -16,6 +16,7 @@ print("audiosr spec:", importlib.util.find_spec("audiosr"))
 
 import models.FLowHigh_inference as fh
 import models.VAudioSR_inference as vsr
+# import models.FlashSR_inference as fsr
 from externals.ssr_eval import SSR_Eval_Helper 
 
 
@@ -75,6 +76,30 @@ def test_VAudioSR():
     # Perform evaluation
     helper.evaluate(limit_test_nums=10, limit_test_speaker=-1)
 
+"""
+def test_FlashSR():
+    input_sr = 44100
+    output_sr = 48000
+    testee = fsr.Complete_FlashSR(input_sr,
+                                    target_sr=output_sr)
 
-#test_flowhigh()
-test_VAudioSR()
+    test_name = "FlashSR"
+    helper = SSR_Eval_Helper(
+        testee,
+        test_name=test_name,  # Test name for storing the result
+        input_sr=44100,  # The sampling rate of the input x in the 'infer' function
+        # output_sr=44100,  # The sampling rate of the output x in the 'infer' function
+        output_sr=48000,
+        evaluation_sr=48000,  # The sampling rate to calculate evaluation metrics.
+        setting_fft={
+            "cutoff_freq": [
+                12000
+            ],  # The cutoff frequency of the input x in the 'infer' function
+        },
+        save_processed_result=True)
+    helper.evaluate(limit_test_nums=10, limit_test_speaker=-1)
+"""
+
+test_flowhigh()
+# test_VAudioSR()
+# test_FlashSR()

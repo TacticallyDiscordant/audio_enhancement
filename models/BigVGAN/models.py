@@ -3,8 +3,8 @@
 
 # Adapted from https://github.com/jik876/hifi-gan under the MIT license.
 #   LICENSE is in incl_licenses directory.
-from TorchJaekwon.Util.Util import Util
-from TorchJaekwon.Util.UtilData import UtilData
+from models.FlashSR.TorchJaekwon.Util.Util import Util
+from models.FlashSR.TorchJaekwon.Util.UtilData import UtilData
 from easydict import EasyDict
 Util.set_sys_path_to_parent_dir(__file__, depth_to_dir_from_file=2)
 
