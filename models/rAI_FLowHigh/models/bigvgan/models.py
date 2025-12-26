@@ -3,10 +3,7 @@
 
 # Adapted from https://github.com/jik876/hifi-gan under the MIT license.
 #   LICENSE is in incl_licenses directory.
-from models.FlashSR.TorchJaekwon.Util.Util import Util
-from models.FlashSR.TorchJaekwon.Util.UtilData import UtilData
-from easydict import EasyDict
-Util.set_sys_path_to_parent_dir(__file__, depth_to_dir_from_file=2)
+
 
 import torch
 import torch.nn.functional as F
@@ -14,9 +11,9 @@ import torch.nn as nn
 from torch.nn import Conv1d, ConvTranspose1d, Conv2d
 from torch.nn.utils import weight_norm, remove_weight_norm, spectral_norm
 
-import Model.BigVGAN.activations as activations
-from Model.BigVGAN.utils import init_weights, get_padding
-from Model.BigVGAN.alias_free_torch import *
+from models.rAI_FLowHigh.models.bigvgan import activations
+from models.rAI_FLowHigh.models.bigvgan.utils import init_weights, get_padding
+from models.rAI_FLowHigh.models.bigvgan.alias_free_torch import *
 
 LRELU_SLOPE = 0.1
 
@@ -382,7 +379,3 @@ def generator_loss(disc_outputs):
 
     return loss, gen_losses
 
-if __name__ == '__main__':
-    big_v_gan = BigVGAN(EasyDict(UtilData.json_load('Model/BigVGAN/configs/bigvgan_24khz_100band.json')))
-    big_v_gan(torch.randn(4, 100, 282))
-    print('')
