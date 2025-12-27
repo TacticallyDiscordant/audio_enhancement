@@ -120,10 +120,13 @@ class Complete_FLowHigh(object):
 class rAI_FLowHigh(object):
         def __init__(self,
                         input_sr,
-                        target_sr):
+                        target_sr,
+                        live_mode=False):
             self.input_sr = input_sr
             self.target_sr = target_sr
             self.model = FlowHighSR.from_pretrained(device="cuda")
+            if live_mode:
+                self.model.set_live_mode()
 
         def infer(self, audio):
             prediction = self.model.generate(audio=audio,

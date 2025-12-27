@@ -30,9 +30,8 @@ class FlowHighSR(ConditionalFlowMatcherWrapper):
         torchdiffeq_ode_method = 'midpoint',   # [euler, midpoint]
         torchode_method_klass = torchode.Tsit5,
         cond_drop_prob = 0.,
-        #
-        upsampling_method='scipy',
-    ):
+        upsampling_method='scipy'
+        ):
         super().__init__(
             flowhigh=flowhigh,
             sigma=sigma,
@@ -48,6 +47,18 @@ class FlowHighSR(ConditionalFlowMatcherWrapper):
         self.postproc = PostProcessing(0)
         # self.device = device
 
+    def set_live_mode(self):
+        live_n_fft = int(2048/4)
+        live_win_length = int(2048/4)
+        live_hop_length = int(480/2)
+        self.flowhigh.audio_enc_dec.n_fft = live_n_fft
+        self.flowhigh.audio_enc_dec.win_length = live_win_length
+        self.flowhigh.audio_enc_dec.hop_length = live_hop_length
+        self.postproc = PostProcessing(0,
+                                        n_fft=live_n_fft,
+                                        win_length=live_win_length,
+                                        hop_length=live_hop_length)
+
     @torch.no_grad()
     def generate(
         self,
@@ -55,7 +66,7 @@ class FlowHighSR(ConditionalFlowMatcherWrapper):
         sr: int,
         target_sampling_rate=48000,
         timestep=1,
-    ):
+        ): 
         if len(audio.shape) == 2:
             audio = audio.squeeze(0)
 
