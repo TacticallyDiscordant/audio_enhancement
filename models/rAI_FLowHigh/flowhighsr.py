@@ -22,11 +22,11 @@ class FlowHighSR(ConditionalFlowMatcherWrapper):
     def __init__(
         self,
         flowhigh: FLowHigh,
-        sigma = 0.,
+        sigma = 1e-4,
         ode_atol = 1e-5,
         ode_rtol = 1e-5,
         use_torchode = False,
-        cfm_method = 'basic_cfm',
+        cfm_method = 'independent_cfm_adaptive',  # 'basic_cfm',
         torchdiffeq_ode_method = 'midpoint',   # [euler, midpoint]
         torchode_method_klass = torchode.Tsit5,
         cond_drop_prob = 0.,
@@ -48,9 +48,9 @@ class FlowHighSR(ConditionalFlowMatcherWrapper):
         # self.device = device
 
     def set_live_mode(self):
-        live_n_fft = int(2048/4)
-        live_win_length = int(2048/4)
-        live_hop_length = int(480/2)
+        live_n_fft = int(2048)
+        live_win_length = int(2048)
+        live_hop_length = int(480)
         self.flowhigh.audio_enc_dec.n_fft = live_n_fft
         self.flowhigh.audio_enc_dec.win_length = live_win_length
         self.flowhigh.audio_enc_dec.hop_length = live_hop_length

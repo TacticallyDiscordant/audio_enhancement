@@ -69,7 +69,8 @@ class MelVoco(nn.Module):
                 fmax=self.f_max,
             )
             mel_basis[str(self.f_max)+'_'+str(audio.device)] = torch.from_numpy(mel).float().to(audio.device)
-            hann_window[str(audio.device)] = torch.hann_window(self.win_length).to(audio.device)
+        hann_window[str(audio.device)] = torch.hann_window(self.win_length).to(audio.device)
+        
 
         audio = torch.nn.functional.pad(audio.unsqueeze(1),
                                             (int((self.n_fft-self.hop_length)/2), int((self.n_fft-self.hop_length)/2)), mode='reflect')
@@ -78,16 +79,6 @@ class MelVoco(nn.Module):
         # complex tensor as default, then use view_as_real for future pytorch compatibility
         spec = torch.stft(audio, self.n_fft, hop_length=self.hop_length, win_length=self.win_length, window=hann_window[str(audio.device)],
                         center=False, pad_mode='reflect', normalized=False, onesided=True, return_complex=True)
-        alt_spec = torch.stft(audio,
-                                n_fft=self.n_fft,
-                                hop_length=None,
-                                win_length=None,
-                                center=False,
-                                pad_mode="reflect",  #  default
-                                normalized=False,
-                                onesided=True,
-                                return_complex=True
-                                )
         spec = torch.view_as_real(spec)
         spec = torch.sqrt(spec.pow(2).sum(-1)+(1e-9))
 
