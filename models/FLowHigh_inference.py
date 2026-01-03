@@ -4,6 +4,8 @@ import numpy as np
 import librosa
 import scipy
 from torchinfo import summary
+from src.utility import timer
+
 from models.FLowHigh.cfm_superresolution import (
     MelVoco,
     FLowHigh,
@@ -127,7 +129,7 @@ class rAI_FLowHigh(object):
             self.model = FlowHighSR.from_pretrained(device="cuda")
             if live_mode:
                 self.model.set_live_mode()
-
+                
         def infer(self, audio):
             prediction = self.model.generate(audio=audio,
                                         sr=self.input_sr,

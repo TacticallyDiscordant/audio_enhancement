@@ -1,6 +1,8 @@
 import sys
+import time as timing
 import numpy as np
 from models.FLowHigh_inference import rAI_FLowHigh
+from models.VAudioSR_inference import Predictor
 
 def audio_callback(arguments, mapping, queue):
     """
@@ -41,6 +43,10 @@ class audio_model_passthrough(object):
                                         target_sr=48000,
                                         live_mode=True
                                         )
+        elif model_type == 'VersatileAudioSR':
+            self.model = Predictor()
+            self.model.setup(model_name="speech",
+                                device='cpu')
 
     
     def audio_in_callback(self, arguments, mapping, queue):
@@ -77,9 +83,14 @@ class audio_model_passthrough(object):
             if status:
                 print(status, file=sys.stderr)
             # Fancy indexing with mapping creates a (necessary!) copy:
-            queue[0].put(indata[::arguments.downsample, mapping])
+            into_queue = []
+            into_queue.append(indata[::arguments.downsample, mapping].squeeze())
+            start_time = timing.perf_counter()
             modified = np.reshape(self.model.infer(indata.T), indata.shape)
-            queue[1].put(modified[::arguments.downsample, mapping])
+            end_time = timing.perf_counter()
+            into_queue.append(modified[::arguments.downsample, mapping].squeeze())
+            into_queue.append(end_time - start_time)
             outdata[:] = modified
+            queue.put(into_queue)
 
         return basic_callback

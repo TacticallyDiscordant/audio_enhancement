@@ -1,14 +1,29 @@
 import argparse
+import torch
 import queue
 import sounddevice as sd
 import numpy as np
 from scipy import signal
 import librosa
 import matplotlib.pyplot as plt
-# plotly offline
-import plotly.offline as pyo
-# from plotly.offline import init_notebook_mode #to plot in jupyter notebook
-import plotly.graph_objs as go
+import time
+from functools import wraps
+
+def timer(func):
+    """A decorator that prints the time a function takes to execute."""
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        start_time = time.perf_counter()
+        result = func(*args, **kwargs)
+        end_time = time.perf_counter()
+        print(f"Function '{func.__name__}' executed in {end_time - start_time:.4f}s")
+        return result
+    return wrapper
+
+@timer
+def example_function(delay):
+    """A simple function that pauses for a given time."""
+    time.sleep(delay)
 
 def int_or_str(text):
     """Helper function for argument parsing."""
@@ -42,9 +57,9 @@ def read_input_arguments(parser):
         '-i', '--interval', type=float, default=30,
         help='minimum time between plot updates (default: %(default)s ms)')
     parser.add_argument(
-        '-b', '--blocksize', type=int, help='block size (in samples)')
+        '-b', '--blocksize', type=int, default=1024, help='block size (in samples)')
     parser.add_argument(
-        '-r', '--samplerate', default=48000, type=float, help='sampling rate of audio device')
+        '-r', '--samplerate', type=int, default=48000, help='sampling rate of audio device')
     parser.add_argument(
         '-n', '--downsample', type=int, default=1, metavar='N',
         help='display every Nth sample (default: %(default)s)')
@@ -52,147 +67,38 @@ def read_input_arguments(parser):
         '-c', '--chunk', type=int, default=2048, metavar='CHUNK',
         help='length of stream required for processing (default: %(default)s)')
     parser.add_argument(
-        '--mels', type=int, default=1024, metavar='NMELS',
-        help='Number of Mel bands (default: %(default)s)'
-                        ),
+        '-m', '--mels', type=int, default=1024, metavar='NMELS',
+        help='Number of Mel bands (default: %(default)s)')
     parser.add_argument(
-        '--nfft', type=int, default=2048, metavar='NFFT',
-        help='Length of the signal for visualisation FFT (default: %(default)s)'
-                        ),
+        '-f', '--nfft', type=int, default=2048, metavar='NFFT',
+        help='Length of the signal for visualisation FFT (default: %(default)s)')
     parser.add_argument(
-        '--hoplength', type=int, default=512, metavar='HOPLENGTH',
-        help='Hop length for FFT (default: %(default)s)'
-                        )
+        '-o', '--hoplength', type=int, default=512, metavar='HOPLENGTH',
+        help='Hop length for FFT (default: %(default)s)')
     args = parser.parse_args(remaining)
     if any(c < 1 for c in args.channels):
         parser.error('argument CHANNEL: must be >= 1')
     mapping = [c - 1 for c in args.channels]  # Channel numbers start with 1
-    q = [queue.Queue(), queue.Queue()]
+    q = queue.Queue()
     return args, mapping, q
 
+class LSD(object):
+    EPS = 1e-12
 
-
-class StreamVisualization():
-    def __init__(self, args) -> None:
-
+    def __init__(self, estimation, target, args):
         self.args = args
-        if self.args.samplerate is None:
-            device_info = sd.query_devices(self.args.device, 'input')
-            self.args.samplerate = device_info['default_samplerate']
-
-        length = int(self.args.window * self.args.samplerate / (1000 * self.args.downsample))
-    
-        self.plotdata = np.zeros((length, len(args.channels)))
-
-        self.fig, self.ax = plt.subplots()
-        self.lines = self.ax.plot(self.plotdata)
-        self.set_appearance()
-        
-    def set_appearance(self) -> None:
-        if len(self.args.channels) > 1:
-            self.ax.legend([f'channel {c}' for c in self.args.channels],
-                      loc='lower left', ncol=len(self.args.channels))
-        self.ax.axis((0, len(self.plotdata), -1, 1))
-        self.ax.set_yticks([0])
-        self.ax.yaxis.grid(True)
-        self.ax.tick_params(bottom=False, top=False, labelbottom=False,
-                    right=False, left=False, labelleft=False)
-        self.fig.tight_layout(pad=0)
+        self.estimation = self.to_spectrogram(estimation)
+        self.target = self.to_spectrogram(target)
+        self.lsd = self.log_spectral_distance()
 
 
+    def log_spectral_distance(self):
+        lsd = torch.log10(self.target**2 / ((self.estimation + self.EPS) ** 2) + self.EPS) ** 2
+        lsd = torch.mean(torch.mean(lsd, axis=3) ** 0.5, axis=2)
+        return lsd[..., None, None]
 
-    def update_plot(self, q):
-        """This is called by matplotlib for each plot update.
-
-        Typically, audio callbacks happen more frequently than plot updates,
-        therefore the queue tends to contain multiple blocks of audio data.
-
-        """
-        while True:
-            try:
-                data = q.get_nowait()
-            except queue.Empty:
-                break
-            shift = len(data)
-            self.plotdata = np.roll(self.plotdata, -shift, axis=0)
-            self.plotdata[-shift:, :] = data
-        lines = self.lines
-        for column, line in enumerate(lines):
-            line.set_ydata(self.plotdata[:, column])
-        self.lines = lines
-        return self.lines
-        
-
-class alt_StreamVisualization():
-    def __init__(self, chunk_size, sampling_rate=48000,
-                        n_mels = 1024,
-                        n_fft = 2048,
-                        hop_length = 512):
-        #Spectrogram
-        self.sr = sampling_rate
-        self.chunk = chunk_size
-        init_audio = librosa.tone(880, sr=self.sr, length=self.chunk)
-        update_audio = librosa.tone(2000, sr=self.sr, length=self.chunk)
-        # plt.figure()
-        self.n_mels = n_mels
-        self.n_fft = n_fft
-        self.hop_length = hop_length
-        # freqs, bins, Pxx = signal.spectrogram(Audiodata, fs,window = w,nfft=N)
-        init_trace = self.make_trace(init_audio)
-        self.fig = self.figure_init(init_trace)
-
-    def get_mel_spec(self, audio):
-        d = librosa.feature.melspectrogram(y=audio, sr=self.sr, n_mels=self.n_mels, n_fft=self.n_fft)
-        d_db = librosa.power_to_db(d, ref=np.max)
-        times = librosa.times_like(d_db, sr=self.sr, hop_length=self.hop_length)
-        mel_freqs = librosa.mel_frequencies(n_mels=self.n_mels, fmin=0, fmax=self.sr/2)
-        return d_db, times, mel_freqs
-
-    def make_trace(self, audio):
-        d_db, times, mel_freqs = self.get_mel_spec(audio)
-        trace = go.Heatmap(z=d_db,
-                            x=times,
-                            y=mel_freqs,
-                            colorscale='Inferno', # Use a visually appealing color scale
-                            colorbar={'title': 'Power (dB)'})
-        return trace
-
-    def figure_init(self, trace):
-        fig = go.Figure(data=[trace])
-
-        # Update layout for better presentation
-        fig.update_layout(
-                        title='Input Stream',
-                        xaxis_title='Time (s)',
-                        yaxis_title='Frequency (Mel)',
-                        yaxis=dict(type='log') # Often helpful to display mel scale on a log-like axis
-                        )
-        return fig
-
-class melSpecVis():
-    def __init__(self, args, cmap='inferno'):
-        self.args = args
-        self.cmap = cmap
-
-    def get_mel_spec(self, audio):
-        s = librosa.feature.melspectrogram(y=audio,
-                                                sr=self.args.samplerate,
-                                                n_mels=self.args.mels,
-                                                n_fft=self.args.nfft)
-        s_db = librosa.power_to_db(s, ref=np.max)
-        times = librosa.times_like(s_db,
-                                    sr=self.args.samplerate,
-                                    hop_length=self.args.hoplength)
-        mel_freqs = librosa.mel_frequencies(n_mels=self.args.mels,
-                                            fmin=0,
-                                            fmax=self.args.samplerate/2)
-        return s_db, times, mel_freqs
-
-    def make_figure(self, s_db):
-        fig, ax = plt.subplots()
-
-        img = librosa.display.specshow(s_db, sr=self.args.samplerate, hop_length=self.args.hoplength,
-                                    x_axis='time', y_axis='mel', cmap=self.cmap, ax=ax)
-        cbar = fig.colorbar(img, ax=ax, format='%+2.0f dB')
-        ax.set_title('Mel spectrogram')
-        return fig, ax, img
+    def to_spectrogram(self, audio) :
+        f = np.abs(librosa.stft(audio, hop_length=self.args.hop_length, n_fft=self.args.n_fft))
+        f = np.transpose(f, (1, 0))
+        f = torch.tensor(f[None, None, ...])
+        return f

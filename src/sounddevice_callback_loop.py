@@ -13,11 +13,10 @@ from matplotlib.animation import FuncAnimation
 parser = argparse.ArgumentParser(add_help=False)
 args, mapping, q = utility.read_input_arguments(parser)
 
-vis_obj = utility.StreamVisualization(args=args)
+# vis_obj = utility.StreamVisualization(args=args)
 
 # load model
 model = callback_func.audio_model_passthrough(model_type='FLowHigh', arguments=args)
-
 """
 stream = sd.InputStream(
         device=args.device, channels=max(args.channels),
@@ -41,8 +40,13 @@ stream = sd.Stream(
 # 
 queue_output = []
 with stream:
-    while True:
-        ani = FuncAnimation(vis_obj.fig, vis_obj.update_plot(q=q[0]), interval=args.interval, blit=True)
+        while True:
+                data_in = q[0].get()
+                data_out = q[1].get()
+                print('Running!')
+# with stream:
+#     while True:
+#         ani = FuncAnimation(vis_obj.fig, vis_obj.update_plot(q=q[0]), interval=args.interval, blit=True)
         
         # for _ in range(10):
         # queue_output.append(q.get())
