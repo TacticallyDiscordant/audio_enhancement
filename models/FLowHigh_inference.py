@@ -3,8 +3,10 @@ import torch
 import numpy as np
 import librosa
 import scipy
+import time
 from torchinfo import summary
 from src.utility import timer
+
 
 from models.FLowHigh.cfm_superresolution import (
     MelVoco,
@@ -123,10 +125,18 @@ class rAI_FLowHigh(object):
         def __init__(self,
                         input_sr,
                         target_sr,
+                        ode_method='midpoint',
+                        architecture='transformer',
+                        basic=False,
                         live_mode=False):
             self.input_sr = input_sr
             self.target_sr = target_sr
-            self.model = FlowHighSR.from_pretrained(device="cuda")
+            if basic:
+                self.model = FlowHighSR.from_pretrained_alt(device="cuda")
+            else:
+                self.model = FlowHighSR.from_pretrained_alt(device="cuda")
+            self.model.odeint_kwargs['method'] =  ode_method
+            self.model.flowhigh.architecture = architecture
             if live_mode:
                 self.model.set_live_mode()
                 
@@ -135,3 +145,14 @@ class rAI_FLowHigh(object):
                                         sr=self.input_sr,
                                         target_sampling_rate=self.target_sr)
             return prediction.cpu().squeeze().numpy()
+        
+                
+        def timed_infer(self, audio):
+            t1 = time.time()
+            prediction = self.model.generate(audio=audio,
+                                        sr=self.input_sr,
+                                        target_sampling_rate=self.target_sr)
+            t2 = time.time()
+            inference_time = t2-t1
+            inference_time_per_second = inference_time/ (audio.shape[0]/self.input_sr)
+            return prediction.cpu().squeeze().numpy(), {'inference_speed': inference_time_per_second}

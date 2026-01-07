@@ -16,6 +16,9 @@ from models.rAI_FLowHigh.postprocessing import PostProcessing
 
 
 REPO_ID = "ResembleAI/FlowHigh"
+FH_ALT = "kiriyamaX/FLowHigh_indep_adaptive_400k"
+BIGVGAN = "kiriyamaX/bigvgan_48khz_256band"
+
 
 
 class FlowHighSR(ConditionalFlowMatcherWrapper):
@@ -158,3 +161,55 @@ class FlowHighSR(ConditionalFlowMatcherWrapper):
             local_path = hf_hub_download(repo_id=REPO_ID, filename=fpath)
 
         return cls.from_local(Path(local_path).parent, device)
+
+    @classmethod
+    def from_pretrained_alt(cls, device) -> 'FlowHighSR':
+        """Load alternative FLowHigh model from separate HuggingFace repositories."""
+        # Download FLowHigh model files
+        flowhigh_config = hf_hub_download(
+            repo_id=FH_ALT, 
+            filename="config.json"
+        )
+        flowhigh_weights = hf_hub_download(
+            repo_id=FH_ALT, 
+            filename="FLowHigh_indep_adaptive_400k.pt"
+        )
+        
+        # Download BigVGAN vocoder files
+        bigvgan_config = hf_hub_download(
+            repo_id=BIGVGAN, 
+            filename="bigvgan_48khz_256band_config.json"
+        )
+        bigvgan_weights = hf_hub_download(
+            repo_id=BIGVGAN, 
+            filename="g_48_00850000"
+        )
+        
+        # Initialize vocoder with downloaded files
+        voc = MelVoco(
+            vocoder_config=bigvgan_config,
+            vocoder_path=bigvgan_weights,
+        )
+
+        # Initialize FLowHigh model
+        SR_generator = FLowHigh(
+            dim_in=voc.n_mels,
+            audio_enc_dec=voc,
+            depth=2,
+        )
+        SR_generator = SR_generator.to(device).eval()
+
+        # Create CFM wrapper
+        cfm_wrapper = cls(
+            flowhigh=SR_generator,
+        )
+        
+        # Load checkpoint
+        model_checkpoint = torch.load(
+            flowhigh_weights,
+            map_location=device
+        )
+        cfm_wrapper.load_state_dict(model_checkpoint['model'])
+        cfm_wrapper = cfm_wrapper.to(device).eval()
+        
+        return cfm_wrapper

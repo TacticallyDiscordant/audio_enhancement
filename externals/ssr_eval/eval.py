@@ -101,7 +101,7 @@ class SSR_Eval_Helper:
 
         for k in processed_low_res_input.keys():
             result_fname = file + k + "_processed_" + self.test_name + ".wav"
-            ret = self.testee.infer(processed_low_res_input[k])
+            ret = self.testee.timed_infer(processed_low_res_input[k])
             if type(ret) == tuple:
                 processed, addtional_metrics = ret
             else:

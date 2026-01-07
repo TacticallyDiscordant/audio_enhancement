@@ -1,6 +1,7 @@
 import gc
 import os
 import random
+import time
 import numpy as np
 from scipy.signal.windows import hann
 import soundfile as sf
@@ -175,10 +176,15 @@ class Predictor(BasePredictor):
         # return reconstructed_audio[0]
         return reconstructed_audio
 
-    def infer(self,
+    def timed_infer(self,
         audio: list = Input(description="Audio to upsample")):
+        t1 = time.time()
         waveform = self.process_audio(audio)
-        return waveform.squeeze()
+        t2 = time.time()
+        inference_time = t2-t1
+        inference_time_per_second = inference_time/ (audio.shape[0]/self.input_sr)
+        return waveform.squeeze(), {'inference_speed': inference_time_per_second}
+
 
 if __name__ == "__main__":
 

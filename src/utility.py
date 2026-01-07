@@ -79,7 +79,8 @@ def read_input_arguments(parser):
     if any(c < 1 for c in args.channels):
         parser.error('argument CHANNEL: must be >= 1')
     mapping = [c - 1 for c in args.channels]  # Channel numbers start with 1
-    q = queue.Queue()
+    # q = queue.Queue()
+    q = queue.Queue(maxsize=100)
     return args, mapping, q
 
 class LSD(object):

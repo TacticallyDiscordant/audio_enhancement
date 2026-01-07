@@ -41,8 +41,7 @@ stream = sd.Stream(
 queue_output = []
 with stream:
         while True:
-                data_in = q[0].get()
-                data_out = q[1].get()
+                data_in = q.get()
                 print('Running!')
 # with stream:
 #     while True:

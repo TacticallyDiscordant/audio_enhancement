@@ -25,18 +25,9 @@ vis_in_obj = utility.alt_StreamVisualization(args.chunk, args.samplerate,
 #                                                hop_length=256)
 
 # load model
-model = callback_func.audio_model_indata_with_threading(model_type='FLowHigh', arguments=args)
-"""
-stream = sd.Stream(
-        device=args.device,
-        channels=1,  #  max(args.channels),
-        samplerate=args.samplerate,
-        blocksize=args.chunk,
-        callback=model.stream_callback(arguments=args, mapping=mapping, queue=q)
-        )
-"""
+model = callback_func.audio_model_pair(model_type='FLowHigh', arguments=args)
 
-original_callback = model.stream_indata_callback(arguments=args, mapping=mapping, queue=q)
+original_callback = model.in_stream_callback(arguments=args, mapping=mapping, queue=q[0])
 
 callback_error = [None]  # Store error from callback
 callback_count = [0]  # Count callbacks
@@ -50,7 +41,8 @@ def safe_callback(indata, frames, time_info, status):
         
         # Check if queue is being written to
         if callback_count[0] % 100 == 0:
-            print(f"Callback #{callback_count[0]}, queue size: {q.qsize()}")
+            print(f"Callback #{callback_count[0]}, in-queue size: {q[0].qsize()}")
+        
         return result
     except Exception as e:
         callback_error[0] = e
@@ -58,11 +50,9 @@ def safe_callback(indata, frames, time_info, status):
         import traceback
         traceback.print_exc()
         # Continue to prevent stream from dying
-        # if outdata is not None:
-        #     outdata.fill(0)
 
 stream = sd.InputStream(
-        device=args.device,
+        device=21,
         channels=1,
         samplerate=args.samplerate,
         blocksize=args.chunk,
@@ -70,12 +60,13 @@ stream = sd.InputStream(
         )
 
 with stream:
+      
         def monitor_queue():
                 while True:
                         time.sleep(5)
-                        size = q.qsize()
-                        # buffer_size = watcher.buffer_q.qsize()
-                        # print(f"Queue size: {size}, Buffer: {buffer_size}, Callbacks: {callback_count[0]}")
+                        size = q[0].qsize()
+                        buffer_size = watcher.buffer_q.qsize()
+                        print(f"Queue size: {size}, Buffer: {buffer_size}, Callbacks: {callback_count[0]}")
 
                         if callback_error[0]:
                                 print(f"CALLBACK ERROR DETECTED: {callback_error[0]}")
@@ -84,12 +75,11 @@ with stream:
                                 print("WARNING: Input queue is empty!")
                         if size >= 90:
                                 print(f"WARNING: Input queue near full! ({size}/100)")
-
+        
         monitor_thread = threading.Thread(target=monitor_queue, daemon=True)
         monitor_thread.start()
- 
-        
-        watcher = vis.ChappyVisFour(args=args, q=q, interval=500)
+    
+        watcher = vis.ChappyVisOne(args=args, q=q[0], interval=200)
         anim = watcher.update()
         
         try:
@@ -102,4 +92,4 @@ with stream:
                 print(f"Final callback count: {callback_count[0]}")
                 if callback_error[0]:
                         print(f"Callback error was: {callback_error[0]}")
-        
+
