@@ -21,7 +21,7 @@ model = callback_func.audio_model_passthrough(model_type='FLowHigh', arguments=a
 
 
 stream = sd.Stream(
-        # device=args.device,
+        device= (21, 21),  # args.device,
         channels=1,  #  max(args.channels),
         samplerate=args.samplerate,
         blocksize=args.chunk,
@@ -32,9 +32,9 @@ stream = sd.Stream(
 
 with stream:
         while True:
-                pass
+                # pass
                 # data_in = q.get()
-                # print(f'Queue size: {q.qsize()}')
+                print(f'Queue size: {q.qsize()}')
 # with stream:
 #     while True:
 #         ani = FuncAnimation(vis_obj.fig, vis_obj.update_plot(q=q[0]), interval=args.interval, blit=True)

@@ -95,13 +95,12 @@ class audio_model_passthrough(object):
             if status:
                 print(status, file=sys.stderr)
             modified = np.reshape(self.model.infer(indata.T), indata.shape)
-            indata = None
-
             queue.put(modified[::arguments.downsample, mapping])
-            if queue.qsize() < 200:  # load buffer
-                outdata = np.zeros(indata.shape)
-            else:
-                outdata = queue.get_nowait()
+            # if queue.qsize() < 200:  # load buffer
+            #     outdata = np.zeros(indata.shape)
+            # else:
+            # outdata = modified[::arguments.downsample, mapping]  # queue.get_nowait()
+            outdata[:] = 0
             
         return basic_callback
 
