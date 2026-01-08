@@ -17,32 +17,24 @@ args, mapping, q = utility.read_input_arguments(parser)
 
 # load model
 model = callback_func.audio_model_passthrough(model_type='FLowHigh', arguments=args)
-"""
-stream = sd.InputStream(
-        device=args.device, channels=max(args.channels),
-        samplerate=args.samplerate, callback=model.audio_in_callback(arguments=args, mapping=mapping, queue=q))
+# model = callback_func.audio_model_passthrough(model_type='FlashSR', arguments=args)
 
-
-out_stream = sd.OutputStream(
-        device=args.device, channels=max(args.channels),
-        samplerate=args.samplerate)  # , callback=callback_func.audio_callback(arguments=args, mapping=mapping, queue=q))
-
-"""
 
 stream = sd.Stream(
-        device=args.device,
+        # device=args.device,
         channels=1,  #  max(args.channels),
         samplerate=args.samplerate,
         blocksize=args.chunk,
+        latency='high',
         callback=model.stream_callback(arguments=args, mapping=mapping, queue=q)
         )
 
-# 
-queue_output = []
+
 with stream:
         while True:
-                data_in = q.get()
-                print('Running!')
+                pass
+                # data_in = q.get()
+                # print(f'Queue size: {q.qsize()}')
 # with stream:
 #     while True:
 #         ani = FuncAnimation(vis_obj.fig, vis_obj.update_plot(q=q[0]), interval=args.interval, blit=True)

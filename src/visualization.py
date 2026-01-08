@@ -1,3 +1,8 @@
+import sys, os, pathlib, importlib.util
+# add project root to sys.path so 'models' package (models/__init__.py) is importable
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+
 import os
 import matplotlib
 matplotlib.use('TkAgg')  # MUST be before any other matplotlib imports
@@ -578,26 +583,65 @@ class melSpecVis():
         ax.set_title('Mel spectrogram')
         # return fig, ax, img
 
-def main():
-    """Launcher"""
-    filename = os.path.basename(__file__)
-    print(f'Start of {filename} \n')
-    parser = argparse.ArgumentParser(add_help=False)
-    args, mapping, q = util.read_input_arguments(parser)
-    args.samplerate = 48000
-    args.hoplength = 512
-    args.nfft = 2048
-    args.mels = 1024
-    chappy = ChappyVisThree(args=args)
-    chappy.update()
-    # Set up plot to call animate() function periodically
-    try:
+def plot_metrics(path: str, key: str = 'proc_fft_24000_44100', save_path: str = None):
+    """
+    Create bar plots for log-spectral distances and inference speeds.
+    
+    Args:
+        path: Path to directory containing JSON files
+        key: Key to extract metrics from JSON (default: 'proc_fft_24000_44100')
+        save_path: Optional path to save the plots. If None, plots are displayed.
+    """
+    names, lsd_list, speed_list = util.read_from_json(path, key)
+    
+    fig1, ax1 = plt.subplots(1, 1, figsize=(10, 7))
+    fig2, ax2 = plt.subplots(1, 1, figsize=(10, 7))
+    
+    # Plot Log-Spectral Distance
+    ax1.bar(range(len(names)), lsd_list, color='steelblue', alpha=0.8)
+    # ax1.set_xlabel('Model', fontsize=12)
+    ax1.set_ylabel('Log-Spectral Distance', fontsize=12)
+    ax1.set_title('Log-Spectral Distance by Model', fontsize=14, fontweight='bold')
+    ax1.set_xticks(range(len(names)))
+    ax1.set_xticklabels(names, rotation=45, ha='right')
+    # ax1.grid(axis='y', alpha=0.3, linestyle='--')
+    ax1.grid(axis='y', alpha=0.2, linestyle='--')
+    ax1.grid(axis='x', alpha=0, linestyle='--')
+    
+    # Add value labels on bars
+    for i, v in enumerate(lsd_list):
+        ax1.text(i, v, f'{v:.3f}', ha='center', va='bottom', fontsize=9)
+    
+    # Plot Inference Speed
+    ax2.bar(range(len(names)), speed_list, color='coral', alpha=0.8)
+    # ax2.set_xlabel('Model', fontsize=12)
+    ax2.set_ylabel('Inference Speed (s)', fontsize=12)
+    ax2.set_title('Inference Speed by Model', fontsize=14, fontweight='bold')
+    ax2.set_xticks(range(len(names)))
+    ax2.set_xticklabels(names, rotation=45, ha='right')
+    ax2.grid(axis='y', alpha=0.2, linestyle='--')
+    ax2.grid(axis='x', alpha=0, linestyle='--')
+
+    
+    # Add value labels on bars
+    for i, v in enumerate(speed_list):
+        ax2.text(i, v, f'{v:.3f}', ha='center', va='bottom', fontsize=9)
+    
+    fig1.tight_layout()
+    fig2.tight_layout()
+    
+    if save_path:
+        fig1.savefig(f"{save_path}/lsd.png", dpi=300, bbox_inches='tight')
+        fig2.savefig(f"{save_path}/speed.png", dpi=300, bbox_inches='tight')
+        print(f"Plot saved to {save_path}")
+    else:
         plt.show()
-        print('Closed Plot')
-        print('End of', filename)
-    except KeyboardInterrupt:
-        print('Keyboard interrupt occurred')
-        print('End of', filename)
+    
+    return fig1, fig2
+
+
+def main():
+   plot_metrics(path='./results', save_path='./reports/figures')
 
 
 if __name__ == "__main__":

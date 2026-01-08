@@ -5,6 +5,7 @@ import queue as queueing
 import threading
 from models.FLowHigh_inference import rAI_FLowHigh
 from models.VAudioSR_inference import Predictor
+from models.FlashSR_inference import FlashSR
 
 def audio_callback(arguments, mapping, queue):
     """
@@ -50,6 +51,14 @@ class audio_model_passthrough(object):
             self.model.setup(model_name="speech",
                                 device='cpu')
 
+        elif model_type == 'FlashSR':
+                input_sr = 44100
+                output_sr = 48000
+                self.model = FlashSR(#model_path='./models/weights_and_configs/FlashSR/model.onnx',
+                                model_path='./models/weights_and_configs/FlashSR/upsampler.pth',
+                                input_sr=input_sr,
+                                target_sr=output_sr)
+
     
     def audio_in_callback(self, arguments, mapping, queue):
         """
@@ -85,17 +94,15 @@ class audio_model_passthrough(object):
             """This is called (from a separate thread) for each audio block."""
             if status:
                 print(status, file=sys.stderr)
-            # Fancy indexing with mapping creates a (necessary!) copy:
-            into_queue = []
-            into_queue.append(indata[::arguments.downsample, mapping].squeeze())
-            start_time = timing.perf_counter()
             modified = np.reshape(self.model.infer(indata.T), indata.shape)
-            end_time = timing.perf_counter()
-            into_queue.append(modified[::arguments.downsample, mapping].squeeze())
-            into_queue.append(end_time - start_time)
-            outdata[:] = modified
-            queue.put(into_queue)
+            indata = None
 
+            queue.put(modified[::arguments.downsample, mapping])
+            if queue.qsize() < 200:  # load buffer
+                outdata = np.zeros(indata.shape)
+            else:
+                outdata = queue.get_nowait()
+            
         return basic_callback
 
 class audio_model_passthrough_with_threading(object):

@@ -2,10 +2,46 @@ import sys, os, pathlib, importlib.util
 # add project root to sys.path so 'models' package (models/__init__.py) is importable
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+import time
 import models.FLowHigh_inference as fh
 import models.VAudioSR_inference as vsr
 import models.FlashSR_inference as flash
-from externals.ssr_eval import SSR_Eval_Helper 
+from externals.ssr_eval import SSR_Eval_Helper, BasicTestee
+
+
+class BasicTestee(BasicTestee):
+    def __init__(self, input_sr=44100, target_sr=48000) -> None:
+        super().__init__()
+        self.input_sr = input_sr
+        self.output_sr = target_sr
+
+    def timed_infer(self, audio):
+        t1 = time.time()
+        output = audio
+        t2 = time.time()
+        inference_time = t2-t1
+        inference_time_per_second = inference_time/ (audio.shape[0]/self.input_sr)
+        return output, {'inference_speed': inference_time_per_second}
+
+
+def test():
+    testee = BasicTestee()
+    # Initialize a evaluation helper
+    helper = SSR_Eval_Helper(
+        testee,
+        test_name="unprocessed",  # Test name for storing the result
+        input_sr=44100,  # The sampling rate of the input x in the 'infer' function
+        output_sr=44100,  # The sampling rate of the output x in the 'infer' function
+        evaluation_sr=48000,  # The sampling rate to calculate evaluation metrics.
+        setting_fft={
+            "cutoff_freq": [
+                12000
+            ],  # The cutoff frequency of the input x in the 'infer' function
+        },
+        save_processed_result=True
+    )
+    # Perform evaluation
+    helper.evaluate(limit_test_nums=10, limit_test_speaker=-1)
 
 
 def test_rAI_FLowHigh():
@@ -94,6 +130,7 @@ def test_FlashSR():
     # Perform evaluation
     helper.evaluate(limit_test_nums=10, limit_test_speaker=-1)
 
+test()
 # test_VAudioSR()
-test_FlashSR()
+# test_FlashSR()
 # test_rAI_FLowHigh()

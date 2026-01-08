@@ -1,5 +1,8 @@
+import os
+import sys
 import argparse
 import torch
+import json
 import queue
 import sounddevice as sd
 import numpy as np
@@ -64,7 +67,7 @@ def read_input_arguments(parser):
         '-n', '--downsample', type=int, default=1, metavar='N',
         help='display every Nth sample (default: %(default)s)')
     parser.add_argument(
-        '-c', '--chunk', type=int, default=2048, metavar='CHUNK',
+        '-c', '--chunk', type=int, default=1024, metavar='CHUNK',
         help='length of stream required for processing (default: %(default)s)')
     parser.add_argument(
         '-m', '--mels', type=int, default=1024, metavar='NMELS',
@@ -80,7 +83,7 @@ def read_input_arguments(parser):
         parser.error('argument CHANNEL: must be >= 1')
     mapping = [c - 1 for c in args.channels]  # Channel numbers start with 1
     # q = queue.Queue()
-    q = queue.Queue(maxsize=100)
+    q = queue.Queue(maxsize=1000)
     return args, mapping, q
 
 class LSD(object):
@@ -103,3 +106,30 @@ class LSD(object):
         f = np.transpose(f, (1, 0))
         f = torch.tensor(f[None, None, ...])
         return f
+
+
+def read_from_json(path: str, key: str = 'proc_fft_24000_44100') -> list:
+    files = os.listdir(path)
+    files.sort()
+    lsd_list = []
+    speed_list = []
+    names = []
+    for file in files:
+        with open(f'{path}/{file}', 'r') as f:
+            data = json.load(f)
+            lsd_list.append(data['averaged'][key]['lsd'])
+            speed_list.append(data['averaged'][key]['inference_speed'])
+            name = file.split('-')[1].split('.')[0]
+            if len(name.split('_')) > 1:
+                if name.split('_')[1] == 'FLowHigh':
+                    model = 'FLowHigh'
+                    cfm = name.split('_')[2]
+                    ode = name.split('_')[3]
+                    name = '\n'.join([model, cfm, ode])
+            names.append(name)
+    return names, lsd_list, speed_list
+
+read_from_json('./results')
+
+
+    
