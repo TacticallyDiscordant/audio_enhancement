@@ -631,8 +631,8 @@ def plot_metrics(path: str, key: str = 'proc_fft_24000_44100', save_path: str = 
     fig2.tight_layout()
     
     if save_path:
-        fig1.savefig(f"{save_path}/lsd.png", dpi=300, bbox_inches='tight')
-        fig2.savefig(f"{save_path}/speed.png", dpi=300, bbox_inches='tight')
+        fig1.savefig(f"{save_path}/lsd.png", dpi=300, bbox_inches='tight', transparent=True)
+        fig2.savefig(f"{save_path}/speed.png", dpi=300, bbox_inches='tight', transparent=True)
         print(f"Plot saved to {save_path}")
     else:
         plt.show()

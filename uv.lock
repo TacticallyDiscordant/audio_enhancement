@@ -95,12 +95,35 @@ wheels = [
 ]
 
 [[package]]
+name = "audeer"
+version = "2.3.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "tqdm" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/fc/58/4dd1de1ff88eb154c2b8be802045327df5a961e46e5310df6591f512646f/audeer-2.3.1.tar.gz", hash = "sha256:6e7e3d76582dfa51fa64e21d514ab20188733689bbaf1a39ef5652a487da40ca", size = 45089, upload-time = "2025-10-27T08:20:21.955Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/60/86/b52c66b0b5d5175f2f9f07e5c5ceb95f19f640c30ed43268b73866f0f976/audeer-2.3.1-py3-none-any.whl", hash = "sha256:525449348e6313dda4168e5b8ce3c50df023b1c7f6afc049a7b17cdd72897a9a", size = 41627, upload-time = "2025-10-27T08:20:20.764Z" },
+]
+
+[[package]]
+name = "audio-degrader"
+version = "1.2.3"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "librosa" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/da/85/19bc7ebaf57033575c92647efbb95f17e5e4ed944b11620f2938c7079d94/audio_degrader-1.2.3.tar.gz", hash = "sha256:3a4487e38ca9dc7cd7b67330ef9a7924f7f58bfa54d8bc9aa42673fbd3a0ee5b", size = 24334, upload-time = "2019-04-24T22:56:02.766Z" }
+
+[[package]]
 name = "audio-enhancement"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
     { name = "anywidget" },
     { name = "attrdict" },
+    { name = "audio-degrader" },
+    { name = "audiofile" },
     { name = "beartype" },
     { name = "bigvgan" },
     { name = "cog" },
@@ -140,6 +163,8 @@ dependencies = [
 requires-dist = [
     { name = "anywidget", specifier = ">=0.9.21" },
     { name = "attrdict", specifier = ">=2.0.1" },
+    { name = "audio-degrader", specifier = ">=1.2.3" },
+    { name = "audiofile", specifier = ">=1.5.1" },
     { name = "beartype", specifier = ">=0.22.9" },
     { name = "bigvgan", specifier = ">=2.4.1" },
     { name = "cog", specifier = ">=0.16.8" },
@@ -173,6 +198,21 @@ requires-dist = [
     { name = "tqdm", specifier = ">=4.67.1" },
     { name = "transformers", extras = ["torch"], specifier = ">=4.57.3" },
     { name = "unidecode", specifier = ">=1.4.0" },
+]
+
+[[package]]
+name = "audiofile"
+version = "1.5.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "audeer" },
+    { name = "audmath" },
+    { name = "numpy" },
+    { name = "soundfile" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/f5/a2/0eef4548cfa95982f372074feb0409082d8a76af8c98f73a89be8adfdcfd/audiofile-1.5.1.tar.gz", hash = "sha256:2a300a6c48841be2ac706437e30bd59babe116a68fa1788209a7d3be42251b47", size = 1134862, upload-time = "2025-01-03T10:47:59.957Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/83/5d/5decc1abb5b587b6224a17992d4b27b870b8640d7b5af31f03f87c3b187b/audiofile-1.5.1-py3-none-any.whl", hash = "sha256:c4282f5d8301c244723695c57b608c94e4051e5fb8529f8b8bc3ee048c044468", size = 1140817, upload-time = "2025-01-03T10:47:56.54Z" },
 ]
 
 [[package]]
@@ -242,6 +282,18 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/a1/4a/874ecf9b472f998130c2b5e145dcdb9f6131e84786111489103b66772143/audioread-3.1.0.tar.gz", hash = "sha256:1c4ab2f2972764c896a8ac61ac53e261c8d29f0c6ccd652f84e18f08a4cab190", size = 20082, upload-time = "2025-10-26T19:44:13.484Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/7e/16/fbe8e1e185a45042f7cd3a282def5bb8d95bb69ab9e9ef6a5368aa17e426/audioread-3.1.0-py3-none-any.whl", hash = "sha256:b30d1df6c5d3de5dcef0fb0e256f6ea17bdcf5f979408df0297d8a408e2971b4", size = 23143, upload-time = "2025-10-26T19:44:12.016Z" },
+]
+
+[[package]]
+name = "audmath"
+version = "1.4.4"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/26/af/d69a2a9a3ce7f6608ad8752b440528f0c5344949177123632669e3748e80/audmath-1.4.4.tar.gz", hash = "sha256:ff5f0b6786b8013a9a3c54ef8d442cf10c455a026a4030b3d014143e0e02622d", size = 23717, upload-time = "2025-10-13T18:06:12.188Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/d0/f3/da2ded0ca8f9c8db0bcf4255463112156ece371449856ebeca46de5fbfef/audmath-1.4.4-py3-none-any.whl", hash = "sha256:0556e5a595cf71660c958ffe2e4c3869316ec8b15eeb86f0ea0243b06f8ab7d5", size = 22396, upload-time = "2025-10-13T18:06:10.832Z" },
 ]
 
 [[package]]

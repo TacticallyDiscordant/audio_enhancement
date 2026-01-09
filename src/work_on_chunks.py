@@ -5,10 +5,15 @@ import numpy as np
 import librosa
 import soundfile as sf
 import matplotlib.pyplot as plt
+from matplotlib import style
 from pathlib import Path
 import argparse
 from models.FLowHigh_inference import rAI_FLowHigh
+import models.FlashSR_inference as flash
 
+
+style.use('fivethirtyeight')
+style.use('dark_background')
 
 def compute_log_spectral_distance(audio1, audio2, sr, n_fft=2048, hop_length=512):
     """Compute log-spectral distance between two audio signals"""
@@ -180,7 +185,7 @@ def plot_results(results, output_plot_path):
     axes[1, 1].legend()
     
     plt.tight_layout()
-    plt.savefig(output_plot_path, dpi=300, bbox_inches='tight')
+    plt.savefig(output_plot_path, dpi=300, bbox_inches='tight', transparent=True)
     print(f"Saved plots to: {output_plot_path}")
     plt.close()
 
@@ -190,10 +195,10 @@ def main():
     parser.add_argument('--input', type=str, required=True, help='Input audio file path')
     parser.add_argument('--output', type=str, default=None, help='Output audio file path')
     parser.add_argument('--plot', type=str, default=None, help='Output plot path')
-    parser.add_argument('--input_sr', type=int, default=16000, help='Input sample rate')
+    parser.add_argument('--input_sr', type=int, default=48000, help='Input sample rate')
     parser.add_argument('--target_sr', type=int, default=48000, help='Target sample rate')
-    parser.add_argument('--chunk_size', type=float, default=.1, help='Chunk size in seconds')
-    parser.add_argument('--overlap', type=float, default=0.01, help='Overlap in seconds')
+    parser.add_argument('--chunk_size', type=float, default=.2, help='Chunk size in seconds')
+    parser.add_argument('--overlap', type=float, default=0.0, help='Overlap in seconds')
     
     args = parser.parse_args()
     
@@ -206,6 +211,7 @@ def main():
     
     # Initialize model
     print("Initializing model...")
+    
     model = rAI_FLowHigh(
         input_sr=args.input_sr,
         target_sr=args.target_sr,
@@ -213,6 +219,12 @@ def main():
         live_mode=False
     )
     
+    """
+    model = flash.FlashSR(model_path='./models/weights_and_configs/FlashSR/upsampler.pth',
+                                input_sr=args.input_sr,
+                                target_sr=args.target_sr
+                                )
+    """
     # Process audio
     results = process_audio_in_chunks(
         args.input,

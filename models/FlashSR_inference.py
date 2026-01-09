@@ -63,7 +63,7 @@ class FlashSR():
                     input_sr,
                     target_sr):
         self.input_sr = input_sr
-        self.output_sr = target_sr
+        self.target_sr = target_sr
 
         self.model = FASR(model_path)
 
@@ -81,8 +81,8 @@ class FlashSR():
         
         # Model outputs at 3x input SR, resample to target SR if needed
         model_output_sr = self.input_sr * 3  # 44100 * 3 = 132300 Hz
-        if model_output_sr != self.output_sr:
-            output = librosa.resample(output, orig_sr=model_output_sr, target_sr=self.output_sr)
+        if model_output_sr != self.target_sr:
+            output = librosa.resample(output, orig_sr=model_output_sr, target_sr=self.target_sr)
         
         inference_time = t2-t1
         inference_time_per_second = inference_time / (len(audio)/self.input_sr)
